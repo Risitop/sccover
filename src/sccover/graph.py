@@ -4,6 +4,7 @@ import numba
 import numpy as np
 
 from anndata import AnnData
+from scipy.sparse import csr_matrix
 from typing import Tuple
 
 
@@ -12,6 +13,17 @@ def random_sampling(adata, target_reduction: float = 0.1, key: str = "random_set
     Basic random subsampling.
     """
     adata.obs[key] = (np.random.random(adata.n_obs) < target_reduction).astype(int)
+
+
+def vertex_cover_base(graph: csr_matrix, n_hops: int = 1) -> np.ndarray:
+    """
+    Runs vertex cover algorithm on a csr-shaped adjacency graph. Returns for each
+    point the index of its reference anchor.
+    """
+    if isinstance(graph, np.ndarray):
+        graph = csr_matrix(graph)
+    assert isinstance(graph, csr_matrix), f"Unknown graph type: {type(graph).__name__}."
+    return _vertex_cover_njit(graph.indptr, graph.indices, n_hops)
 
 
 def vertex_cover(
